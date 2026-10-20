@@ -1,6 +1,7 @@
 import { notFound } from 'next/navigation';
 import { listRecords } from '@/lib/airtable';
 import DataTable from '@/components/DataTable';
+import { Suspense } from 'react';
 
 type Column = { key: string; label: string; date?: boolean };
 
@@ -78,10 +79,27 @@ const SECTIONS: Record<string, { title: string; load: () => Promise<any[]>; orde
   },
 };
 
+// 1. The Page Component (Renders instantly at build time)
 export default async function SectionPage({ params }: { params: Promise<{ section: string }> }) {
   const { section } = await params;
   const config = SECTIONS[section];
   if (!config) notFound();
+
+  return (
+    <>
+      <h1 className='mb-4 text-2xl font-bold'>{config.title}</h1>
+      {/* Suspense boundary catches the uncached fetch below it */}
+      <Suspense fallback={<p className="mt-4 text-gray-500">Loading {config.title.toLowerCase()}...</p>}>
+        <SectionData section={section} />
+      </Suspense>
+    </>
+  );
+}
+
+// 2. The Data Component (Fetches Airtable data on request)
+async function SectionData({ section }: { section: string }) {
+  const config = SECTIONS[section];
+  if (!config) return null;
 
   let rows: any[];
   try {
@@ -89,12 +107,8 @@ export default async function SectionPage({ params }: { params: Promise<{ sectio
   } catch (e: any) {
     return <p className='text-red-600'>Could not load data: {e.message}</p>;
   }
+  
   rows.sort((a, b) => String(b[config.orderBy] ?? '').localeCompare(String(a[config.orderBy] ?? '')));
 
-  return (
-    <>
-      <h1 className='mb-4 text-2xl font-bold'>{config.title}</h1>
-      <DataTable columns={config.columns} rows={rows.slice(0, 200)} />
-    </>
-  );
+  return <DataTable columns={config.columns} rows={rows.slice(0, 200)} />;
 }
