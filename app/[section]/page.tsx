@@ -79,6 +79,17 @@ const SECTIONS: Record<string, { title: string; load: () => Promise<any[]>; orde
   },
 };
 
+// --- NEW FUNCTION ADDED HERE ---
+export function generateStaticParams() {
+  return [
+    { section: 'calls' },
+    { section: 'bookings' },
+    { section: 'orders' },
+    { section: 'customers' },
+  ];
+}
+// -------------------------------
+
 // 1. The Page Component (Renders instantly at build time)
 export default async function SectionPage({ params }: { params: Promise<{ section: string }> }) {
   const { section } = await params;
