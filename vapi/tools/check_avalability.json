@@ -1,0 +1,9 @@
+{
+  "type": "object",
+  "properties": {
+    "date": { "type": "string", "description": "Date as YYYY-MM-DD" },
+    "time": { "type": "string", "description": "24-hour time as HH:MM, for example 19:00" },
+    "party_size": { "type": "integer", "description": "Number of guests" }
+  },
+  "required": ["date", "time", "party_size"]
+}

@@ -1,0 +1,2772 @@
+{
+  "name": "restaurant-brain",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "restaurant-brain",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.2,
+      "position": [
+        0,
+        240
+      ],
+      "id": "a03475ec-ae03-4fb0-a99b-ba37c475cb1f",
+      "name": "Webhook",
+      "webhookId": "3f2c8796-9944-4a02-b429-cbfb2e1b9352"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.body.message.type }}",
+                    "rightValue": "tool-calls",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "87d2d5fc-acbe-4d40-9820-39580865b854"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "tool-calls"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "44b276e6-3c74-4620-bc55-0ca79dd66f7c",
+                    "leftValue": "={{ $json.body.message.type }}",
+                    "rightValue": "end-of-call-report",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "end-of-call-report"
+            }
+          ]
+        },
+        "options": {
+          "fallbackOutput": "extra"
+        }
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "position": [
+        224,
+        224
+      ],
+      "id": "4548313a-e015-4ff2-8b25-ce52c739933f",
+      "name": "Message Type"
+    },
+    {
+      "parameters": {
+        "jsCode": "const msg = $json.body.message;\nconst tc = msg.toolCallList[0];\nlet args = tc.arguments || (tc.function && tc.function.arguments) || {};\nif (typeof args === 'string') args = JSON.parse(args);\nreturn [{\n  json: {\n    toolCallId: tc.id,\n    toolName: tc.name || (tc.function && tc.function.name),\n    args: args,\n    callerNumber: (msg.call && msg.call.customer && msg.call.customer.number) || null,\n    callId: (msg.call && msg.call.id) || null\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        448,
+        -192
+      ],
+      "id": "97935f8e-b955-416c-b6fd-394226893b17",
+      "name": "Parse Tool Call"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.toolName }}",
+                    "rightValue": "check_availability",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "35f792e8-fc0b-42ec-945a-729e483aa015"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "check_availability"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "a7e6d257-7a0e-4603-906b-8d8f24a32907",
+                    "leftValue": "={{ $json.toolName }}",
+                    "rightValue": "create_reservation",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "create_reservation"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "f48b9501-f235-45f8-85f7-dacbd7b6ae9f",
+                    "leftValue": "={{ $json.toolName }}",
+                    "rightValue": "create_order",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "create_order"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "position": [
+        672,
+        -208
+      ],
+      "id": "76b1ae74-dff9-4d19-a8c1-ded237880dad",
+      "name": "Which Tool"
+    },
+    {
+      "parameters": {
+        "operation": "search",
+        "base": {
+          "__rl": true,
+          "value": "appUtGgcVI5DmVnVs",
+          "mode": "list",
+          "cachedResultName": "Spice Route",
+          "cachedResultUrl": "https://airtable.com/appUtGgcVI5DmVnVs"
+        },
+        "table": {
+          "__rl": true,
+          "value": "tblUFHRxzD1k4Fa0b",
+          "mode": "list",
+          "cachedResultName": "reservations",
+          "cachedResultUrl": "https://airtable.com/appUtGgcVI5DmVnVs/tblUFHRxzD1k4Fa0b"
+        },
+        "filterByFormula": "=AND({reservation_date}='{{ $json.args.date }}', {reservation_time}='{{ $json.args.time }}', {status}='confirmed')",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.airtable",
+      "typeVersion": 2.2,
+      "position": [
+        896,
+        -384
+      ],
+      "id": "4546e492-c21b-4fb3-9f71-1bc0f204c69c",
+      "name": "Get Bookings",
+      "alwaysOutputData": true,
+      "credentials": {
+        "airtableTokenApi": {
+          "id": "nrrSqIMdBPET8ELk",
+          "name": "spice-route"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const info = $('Parse Tool Call').first().json;\nconst rows = $input.all().map(i => i.json.fields || i.json).filter(r => r.party_size);\nconst booked = rows.reduce((sum, r) => sum + Number(r.party_size), 0);\nconst CAPACITY = 40;\nconst left = CAPACITY - booked;\nconst wanted = Number(info.args.party_size);\nconst text = left >= wanted\n  ? `Yes, there is space for ${wanted} people on ${info.args.date} at ${info.args.time}.`\n  : `That time is fully booked, only ${left} seats left. Offer the caller a different time.`;\nreturn [{ json: { results: [{ toolCallId: info.toolCallId, result: text }] } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1120,
+        -384
+      ],
+      "id": "6928f503-f6b3-43bb-8175-20b91cc51f08",
+      "name": "Calc Availability"
+    },
+    {
+      "parameters": {
+        "jsCode": "const info = $json;\nconst a = info.args;\nconst code = 'SRK-' + Math.floor(1000 + Math.random() * 9000);\nreturn [{\n  json: {\n    toolCallId: info.toolCallId,\n    code: code,\n    row: {\n      confirmation_code: code,\n      customer_name: a.customer_name,\n      phone: a.phone || info.callerNumber,\n      party_size: a.party_size,\n      reservation_date: a.date,\n      reservation_time: a.time,\n      notes: a.notes || null,\n      call_id: info.callId\n    }\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        896,
+        -192
+      ],
+      "id": "c4831e37-0a63-452f-862a-863d256e87cb",
+      "name": "Prep Reservation"
+    },
+    {
+      "parameters": {
+        "operation": "create",
+        "base": {
+          "__rl": true,
+          "value": "appUtGgcVI5DmVnVs",
+          "mode": "list",
+          "cachedResultName": "Spice Route",
+          "cachedResultUrl": "https://airtable.com/appUtGgcVI5DmVnVs"
+        },
+        "table": {
+          "__rl": true,
+          "value": "tblUFHRxzD1k4Fa0b",
+          "mode": "list",
+          "cachedResultName": "reservations",
+          "cachedResultUrl": "https://airtable.com/appUtGgcVI5DmVnVs/tblUFHRxzD1k4Fa0b"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "confirmation_code": "={{ $json.row.confirmation_code }}",
+            "status": "confirmed",
+            "customer_name": "={{ $json.row.customer_name }}",
+            "phone": "={{ $json.row.phone }}",
+            "party_size": "={{ $json.row.party_size }}",
+            "reservation_date": "={{ $json.row.reservation_date }}",
+            "reservation_time": "={{ $json.row.reservation_time }}",
+            "notes": "={{ $json.row.notes }}",
+            "call_id": "={{ $json.row.call_id }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "confirmation_code",
+              "displayName": "confirmation_code",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "customer_name",
+              "displayName": "customer_name",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "phone",
+              "displayName": "phone",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "party_size",
+              "displayName": "party_size",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "number",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "reservation_date",
+              "displayName": "reservation_date",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "reservation_time",
+              "displayName": "reservation_time",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "notes",
+              "displayName": "notes",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "status",
+              "displayName": "status",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "call_id",
+              "displayName": "call_id",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.airtable",
+      "typeVersion": 2.2,
+      "position": [
+        1120,
+        -192
+      ],
+      "id": "48361696-a555-4073-b898-107078b78a1a",
+      "name": "Save Reservation",
+      "credentials": {
+        "airtableTokenApi": {
+          "id": "nrrSqIMdBPET8ELk",
+          "name": "spice-route"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const prep = $('Prep Reservation').first().json;\nreturn [{ json: { results: [{ toolCallId: prep.toolCallId, result: `Reservation confirmed. The confirmation code is ${prep.code}. Read it back to the caller.` }] } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1344,
+        -192
+      ],
+      "id": "110faa60-df75-4767-aeac-6a0dad125149",
+      "name": "Reply Reservation"
+    },
+    {
+      "parameters": {
+        "jsCode": "const MENU = {\n  'jollof rice with grilled chicken': 6500,\n  'ofada rice with ayamase': 7500,\n  'egusi soup with pounded yam': 7000,\n  'suya platter': 8500,\n  'peppered asun': 5500,\n  'fried plantain': 2000,\n  'moi moi': 1500,\n  'puff puff': 2000,\n  'chapman': 2500,\n  'zobo': 1500\n};\nconst info = $json;\nconst a = info.args;\nlet total = 0;\nconst lines = [];\nconst unknown = [];\nfor (const it of (a.items || [])) {\n  const key = String(it.name).toLowerCase().trim();\n  const qty = Number(it.quantity || 1);\n  if (MENU[key] === undefined) { unknown.push(it.name); continue; }\n  total += MENU[key] * qty;\n  lines.push(`${qty}x ${it.name}`);\n}\nconst code = 'ORD-' + Math.floor(1000 + Math.random() * 9000);\nreturn [{\n  json: {\n    toolCallId: info.toolCallId,\n    unknown: unknown,\n    code: code,\n    total: total,\n    orderType: a.order_type,\n    row: {\n      order_code: code,\n      customer_name: a.customer_name,\n      phone: a.phone || info.callerNumber,\n      order_type: a.order_type,\n      delivery_address: a.delivery_address || null,\n      items: lines.join(', '),\n      total_amount: total,\n      call_id: info.callId\n    }\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        896,
+        48
+      ],
+      "id": "c45a1365-703e-4b0d-a0cc-7c8e409acc65",
+      "name": "Prep Order"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "3df99b5a-2f2d-4dbe-bbc4-3c3ec98f1c79",
+              "leftValue": "={{ $json.unknown.length }}",
+              "rightValue": 0,
+              "operator": {
+                "type": "number",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        1120,
+        48
+      ],
+      "id": "d4e1d6f2-9959-49ba-987c-20401f04b839",
+      "name": "All Items Valid?"
+    },
+    {
+      "parameters": {
+        "operation": "create",
+        "base": {
+          "__rl": true,
+          "value": "appUtGgcVI5DmVnVs",
+          "mode": "list",
+          "cachedResultName": "Spice Route",
+          "cachedResultUrl": "https://airtable.com/appUtGgcVI5DmVnVs"
+        },
+        "table": {
+          "__rl": true,
+          "value": "tblp7a3Awkd52frqi",
+          "mode": "list",
+          "cachedResultName": "orders",
+          "cachedResultUrl": "https://airtable.com/appUtGgcVI5DmVnVs/tblp7a3Awkd52frqi"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "status": "received",
+            "order_code": "={{ $json.row.order_code }}",
+            "customer_name": "={{ $json.row.customer_name }}",
+            "phone": "={{ $json.row.phone }}",
+            "order_type": "={{ $json.row.order_type }}",
+            "delivery_address": "={{ $json.row.delivery_address }}",
+            "items": "={{ $json.row.items }}",
+            "total_amount": "={{ $json.row.total_amount }}",
+            "call_id": "={{ $json.row.call_id }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "order_code",
+              "displayName": "order_code",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "customer_name",
+              "displayName": "customer_name",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "phone",
+              "displayName": "phone",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "order_type",
+              "displayName": "order_type",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "delivery_address",
+              "displayName": "delivery_address",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "items",
+              "displayName": "items",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "total_amount",
+              "displayName": "total_amount",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "number",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "status",
+              "displayName": "status",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "call_id",
+              "displayName": "call_id",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.airtable",
+      "typeVersion": 2.2,
+      "position": [
+        1344,
+        0
+      ],
+      "id": "496810f1-ef30-4c1a-bd6f-e12cc045ef10",
+      "name": "Save Order",
+      "credentials": {
+        "airtableTokenApi": {
+          "id": "nrrSqIMdBPET8ELk",
+          "name": "spice-route"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const prep = $('Prep Order').first().json;\nconst wait = prep.orderType === 'delivery' ? 'about 45 to 60 minutes' : 'about 30 minutes';\nreturn [{ json: { results: [{ toolCallId: prep.toolCallId, result: `Order saved. The order number is ${prep.code}. The total is ${prep.total} naira. It will be ready in ${wait}.` }] } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1568,
+        0
+      ],
+      "id": "a894bafd-19ce-4ede-baae-e71cb7e7c144",
+      "name": "Reply Order"
+    },
+    {
+      "parameters": {
+        "jsCode": "const prep = $('Prep Order').first().json;\nreturn [{ json: { results: [{ toolCallId: prep.toolCallId, result: `These items are not on our menu: ${prep.unknown.join(', ')}. Tell the caller politely and ask them to choose something else.` }] } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1344,
+        192
+      ],
+      "id": "0ee2b40e-db2b-443b-9aff-9a829fd01ffa",
+      "name": "Reply Unknown Item"
+    },
+    {
+      "parameters": {
+        "jsCode": "const m = $json.body.message;\nreturn [{\n  json: {\n    row: {\n      call_id: (m.call && m.call.id) || null,\n      caller_number: (m.call && m.call.customer && m.call.customer.number) || null,\n      duration_seconds: Math.round(m.durationSeconds || 0),\n      summary: (m.analysis && m.analysis.summary) || m.summary || null,\n      transcript: (m.artifact && m.artifact.transcript) || m.transcript || null,\n      ended_reason: m.endedReason || null,\n      cost: m.cost || null\n    }\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        448,
+        240
+      ],
+      "id": "3a4d9aa5-202d-4d7e-901a-d346f781335b",
+      "name": "Parse Report"
+    },
+    {
+      "parameters": {
+        "operation": "create",
+        "base": {
+          "__rl": true,
+          "value": "appUtGgcVI5DmVnVs",
+          "mode": "list",
+          "cachedResultName": "Spice Route",
+          "cachedResultUrl": "https://airtable.com/appUtGgcVI5DmVnVs"
+        },
+        "table": {
+          "__rl": true,
+          "value": "tblVxtoQgKutUJM5G",
+          "mode": "list",
+          "cachedResultName": "calls",
+          "cachedResultUrl": "https://airtable.com/appUtGgcVI5DmVnVs/tblVxtoQgKutUJM5G"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "call_id": "={{ $json.row.call_id }}",
+            "caller_number": "={{ $json.row.caller_number }}",
+            "duration_seconds": "={{ $json.row.duration_seconds }}",
+            "summary": "={{ $json.row.summary }}",
+            "transcript": "={{ $json.row.transcript }}",
+            "ended_reason": "={{ $json.row.ended_reason }}",
+            "cost": "={{ $json.row.cost }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "call_id",
+              "displayName": "call_id",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "caller_number",
+              "displayName": "caller_number",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "duration_seconds",
+              "displayName": "duration_seconds",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "number",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "summary",
+              "displayName": "summary",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "transcript",
+              "displayName": "transcript",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "ended_reason",
+              "displayName": "ended_reason",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "cost",
+              "displayName": "cost",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "number",
+              "readOnly": false,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.airtable",
+      "typeVersion": 2.2,
+      "position": [
+        672,
+        240
+      ],
+      "id": "02e9f927-d84e-4912-80c6-e38820851fdf",
+      "name": "Save Call",
+      "credentials": {
+        "airtableTokenApi": {
+          "id": "nrrSqIMdBPET8ELk",
+          "name": "spice-route"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "noData",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        896,
+        320
+      ],
+      "id": "03627d31-fdbd-4e72-8c13-3973336a6692",
+      "name": "Respond OK"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        1872,
+        -32
+      ],
+      "id": "59087a26-51b8-444e-b042-7e4c268b545f",
+      "name": "Respond Tool Result"
+    }
+  ],
+  "pinData": {
+    "Webhook": [
+      {
+        "json": {
+          "headers": {
+            "host": "n8n.caesarai.site",
+            "user-agent": "axios/1.19.0",
+            "content-length": "31687",
+            "accept": "application/json, text/plain, */*",
+            "accept-encoding": "gzip, br",
+            "cdn-loop": "cloudflare; loops=1",
+            "cf-connecting-ip": "44.250.66.16",
+            "cf-ipcountry": "US",
+            "cf-ray": "a4d7ddd74ac38f7a-PDX",
+            "cf-visitor": "{\"scheme\":\"https\"}",
+            "cf-warp-tag-id": "fa2c5848-7151-43d1-9a7e-c950397f0622",
+            "connection": "keep-alive",
+            "content-type": "application/json",
+            "cookie": "callId=01a1592e-0cad-7888-abaf-14f339ab7ee4",
+            "x-call-id": "01a1592e-0cad-7888-abaf-14f339ab7ee4",
+            "x-forwarded-for": "44.250.66.16",
+            "x-forwarded-proto": "https",
+            "x-vapi-secret": ""
+          },
+          "params": {},
+          "query": {},
+          "body": {
+            "message": {
+              "timestamp": 1792497672768,
+              "type": "tool-calls",
+              "toolCalls": [
+                {
+                  "type": "function",
+                  "id": "toolu_01H7qzy8PJYMxphYfh3cNZMH",
+                  "function": {
+                    "name": "create_order",
+                    "arguments": {
+                      "customer_name": "James",
+                      "phone": "08131241144",
+                      "order_type": "pickup",
+                      "items": [
+                        {
+                          "name": "Jollof Rice with Grilled Chicken",
+                          "quantity": 1
+                        }
+                      ]
+                    }
+                  }
+                }
+              ],
+              "toolCallList": [
+                {
+                  "type": "function",
+                  "id": "toolu_01H7qzy8PJYMxphYfh3cNZMH",
+                  "function": {
+                    "name": "create_order",
+                    "arguments": {
+                      "customer_name": "James",
+                      "phone": "08131241144",
+                      "order_type": "pickup",
+                      "items": [
+                        {
+                          "name": "Jollof Rice with Grilled Chicken",
+                          "quantity": 1
+                        }
+                      ]
+                    }
+                  }
+                }
+              ],
+              "toolWithToolCallList": [
+                {
+                  "type": "function",
+                  "function": {
+                    "name": "create_order",
+                    "parameters": {
+                      "type": "object",
+                      "required": [
+                        "customer_name",
+                        "phone",
+                        "order_type",
+                        "items"
+                      ],
+                      "properties": {
+                        "items": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "required": [
+                              "name",
+                              "quantity"
+                            ],
+                            "properties": {
+                              "name": {
+                                "type": "string"
+                              },
+                              "quantity": {
+                                "type": "integer"
+                              }
+                            }
+                          },
+                          "description": "Each dish with exact menu name and quantity"
+                        },
+                        "phone": {
+                          "type": "string"
+                        },
+                        "order_type": {
+                          "enum": [
+                            "pickup",
+                            "delivery"
+                          ],
+                          "type": "string"
+                        },
+                        "customer_name": {
+                          "type": "string"
+                        },
+                        "delivery_address": {
+                          "type": "string",
+                          "description": "Only for delivery"
+                        }
+                      }
+                    },
+                    "description": "Place a food order after the caller confirms it."
+                  },
+                  "server": {
+                    "url": "https://n8n.caesarai.site/webhook/restaurant-brain",
+                    "timeoutSeconds": 20,
+                    "staticIpAddressesEnabled": false
+                  },
+                  "messages": [
+                    {
+                      "type": "request-start",
+                      "contents": [],
+                      "conditions": [],
+                      "blocking": false
+                    }
+                  ],
+                  "variableExtractionPlan": {
+                    "schema": {
+                      "type": "object",
+                      "required": [],
+                      "properties": {}
+                    }
+                  },
+                  "toolCall": {
+                    "type": "function",
+                    "id": "toolu_01H7qzy8PJYMxphYfh3cNZMH",
+                    "function": {
+                      "name": "create_order",
+                      "arguments": {
+                        "customer_name": "James",
+                        "phone": "08131241144",
+                        "order_type": "pickup",
+                        "items": [
+                          {
+                            "name": "Jollof Rice with Grilled Chicken",
+                            "quantity": 1
+                          }
+                        ]
+                      }
+                    }
+                  }
+                }
+              ],
+              "artifact": {
+                "messages": [
+                  {
+                    "role": "system",
+                    "message": "# Identity\nYou are Alex, the friendly phone receptionist for Spice Route Kitchen, a Nigerian restaurant at 14 Admiralty Way, Lekki Phase 1, Lagos.\nCurrent date and time in Lagos: Tuesday, 20 October 2026, 12:59 PM\n\n# Speaking style\n- Warm, calm and natural. One or two short sentences per turn.\n- Ask only ONE question at a time.\n- Say prices in naira. Read phone numbers and codes digit by digit.\n- Never read the whole menu. Mention at most three items at a time.\n\n# Restaurant facts\n- Open Tuesday to Sunday, 12:00 to 22:00. CLOSED on Mondays. Last reservation time is 21:00.\n- 40 seats per time slot. Groups above 12 people: take their number and say the manager will call back.\n- Pickup ready in about 30 minutes. Delivery in about 45 to 60 minutes, Lekki and Victoria Island only. The delivery fee is paid to the rider.\n- Payment by card, transfer or cash. Free parking for 15 cars.\n- Walk-ins are welcome but weekends fill up, so booking is recommended.\n- Vegetarian options: Moi Moi, Fried Pl...",
+                    "time": 1792497552706,
+                    "secondsFromStart": 0
+                  },
+                  {
+                    "role": "bot",
+                    "message": "Thank you for calling SpiceRoute Kitchen, this is Alex. How can I help you today?",
+                    "time": 1792497555334,
+                    "endTime": 1792497558454,
+                    "secondsFromStart": 2.209,
+                    "duration": 3120,
+                    "source": "",
+                    "assistantName": "Spice Route Assistant",
+                    "assistantId": "2f355993-c8af-4ac3-a123-6e6f547e3bb1"
+                  },
+                  {
+                    "role": "user",
+                    "message": "Yeah, um, I want to pick up on that one jollof rice with grilled chicken and two chow mein.",
+                    "time": 1792497561465,
+                    "endTime": 1792497567465,
+                    "secondsFromStart": 8.34,
+                    "duration": 6000,
+                    "metadata": {
+                      "wordLevelConfidence": [
+                        {
+                          "word": "Ye",
+                          "start": 8.34,
+                          "end": 8.4,
+                          "confidence": 0.999,
+                          "punctuated_word": "Ye",
+                          "language": "en"
+                        },
+                        {
+                          "word": "ah,",
+                          "start": 8.46,
+                          "end": 8.52,
+                          "confidence": 0.85,
+                          "punctuated_word": "ah,",
+                          "language": "en"
+                        },
+                        {
+                          "word": "um",
+                          "start": 8.76,
+                          "end": 8.82,
+                          "confidence": 0.957,
+                          "punctuated_word": "um",
+                          "language": "en"
+                        },
+                        {
+                          "word": ",",
+                          "start": 8.88,
+                          "end": 8.94,
+                          "confidence": 0.999,
+                          "punctuated_word": ",",
+                          "language": "en"
+                        },
+                        {
+                          "word": "I",
+                          "start": 8.94,
+                          "end": 9,
+                          "confidence": 0.999,
+                          "punctuated_word": "I",
+                          "language": "en"
+                        },
+                        {
+                          "word": "w",
+                          "start": 9.12,
+                          "end": 9.18,
+                          "confidence": 0.991,
+                          "punctuated_word": "w",
+                          "language": "en"
+                        },
+                        {
+                          "word": "ant",
+                          "start": 9.24,
+                          "end": 9.3,
+                          "confidence": 1,
+                          "punctuated_word": "ant",
+                          "language": "en"
+                        },
+                        {
+                          "word": "to",
+                          "start": 9.36,
+                          "end": 9.42,
+                          "confidence": 0.948,
+                          "punctuated_word": "to",
+                          "language": "en"
+                        },
+                        {
+                          "word": "p",
+                          "start": 9.54,
+                          "end": 9.6,
+                          "confidence": 0.991,
+                          "punctuated_word": "p",
+                          "language": "en"
+                        },
+                        {
+                          "word": "ick",
+                          "start": 9.66,
+                          "end": 9.72,
+                          "confidence": 1,
+                          "punctuated_word": "ick",
+                          "language": "en"
+                        },
+                        {
+                          "word": "up",
+                          "start": 9.78,
+                          "end": 9.84,
+                          "confidence": 0.997,
+                          "punctuated_word": "up",
+                          "language": "en"
+                        },
+                        {
+                          "word": "on",
+                          "start": 10.08,
+                          "end": 10.14,
+                          "confidence": 0.983,
+                          "punctuated_word": "on",
+                          "language": "en"
+                        },
+                        {
+                          "word": "that",
+                          "start": 10.26,
+                          "end": 10.32,
+                          "confidence": 0.231,
+                          "punctuated_word": "that",
+                          "language": "en"
+                        },
+                        {
+                          "word": "one",
+                          "start": 10.8,
+                          "end": 10.86,
+                          "confidence": 0.941,
+                          "punctuated_word": "one",
+                          "language": "en"
+                        },
+                        {
+                          "word": "j",
+                          "start": 11.04,
+                          "end": 11.1,
+                          "confidence": 0.714,
+                          "punctuated_word": "j",
+                          "language": "en"
+                        },
+                        {
+                          "word": "ollo",
+                          "start": 11.22,
+                          "end": 11.28,
+                          "confidence": 0.981,
+                          "punctuated_word": "ollo",
+                          "language": "en"
+                        },
+                        {
+                          "word": "f",
+                          "start": 11.28,
+                          "end": 11.34,
+                          "confidence": 1,
+                          "punctuated_word": "f",
+                          "language": "en"
+                        },
+                        {
+                          "word": "r",
+                          "start": 11.4,
+                          "end": 11.46,
+                          "confidence": 0.997,
+                          "punctuated_word": "r",
+                          "language": "en"
+                        },
+                        {
+                          "word": "ice",
+                          "start": 11.58,
+                          "end": 11.64,
+                          "confidence": 0.988,
+                          "punctuated_word": "ice",
+                          "language": "en"
+                        },
+                        {
+                          "word": "with",
+                          "start": 11.76,
+                          "end": 11.82,
+                          "confidence": 0.993,
+                          "punctuated_word": "with",
+                          "language": "en"
+                        },
+                        {
+                          "word": "gr",
+                          "start": 12.42,
+                          "end": 12.48,
+                          "confidence": 0.647,
+                          "punctuated_word": "gr",
+                          "language": "en"
+                        },
+                        {
+                          "word": "ill",
+                          "start": 12.48,
+                          "end": 12.54,
+                          "confidence": 1,
+                          "punctuated_word": "ill",
+                          "language": "en"
+                        },
+                        {
+                          "word": "ed",
+                          "start": 12.54,
+                          "end": 12.6,
+                          "confidence": 1,
+                          "punctuated_word": "ed",
+                          "language": "en"
+                        },
+                        {
+                          "word": "ch",
+                          "start": 12.66,
+                          "end": 12.72,
+                          "confidence": 1,
+                          "punctuated_word": "ch",
+                          "language": "en"
+                        },
+                        {
+                          "word": "ick",
+                          "start": 12.72,
+                          "end": 12.78,
+                          "confidence": 1,
+                          "punctuated_word": "ick",
+                          "language": "en"
+                        },
+                        {
+                          "word": "en",
+                          "start": 12.84,
+                          "end": 12.9,
+                          "confidence": 0.657,
+                          "punctuated_word": "en",
+                          "language": "en"
+                        },
+                        {
+                          "word": "and",
+                          "start": 13.14,
+                          "end": 13.2,
+                          "confidence": 0.987,
+                          "punctuated_word": "and",
+                          "language": "en"
+                        },
+                        {
+                          "word": "two",
+                          "start": 13.62,
+                          "end": 13.68,
+                          "confidence": 0.855,
+                          "punctuated_word": "two",
+                          "language": "en"
+                        },
+                        {
+                          "word": "ch",
+                          "start": 13.86,
+                          "end": 13.92,
+                          "confidence": 0.476,
+                          "punctuated_word": "ch",
+                          "language": "en"
+                        },
+                        {
+                          "word": "ow",
+                          "start": 13.98,
+                          "end": 14.04,
+                          "confidence": 0.439,
+                          "punctuated_word": "ow",
+                          "language": "en"
+                        },
+                        {
+                          "word": "me",
+                          "start": 14.16,
+                          "end": 14.22,
+                          "confidence": 0.864,
+                          "punctuated_word": "me",
+                          "language": "en"
+                        },
+                        {
+                          "word": "in.",
+                          "start": 14.28,
+                          "end": 14.34,
+                          "confidence": 0.37,
+                          "punctuated_word": "in.",
+                          "language": "en"
+                        }
+                      ]
+                    },
+                    "confidence": 0.8704375,
+                    "confidenceSource": "derived"
+                  },
+                  {
+                    "role": "bot",
+                    "message": "I'd love to help with the jollof rice with grilled chicken. However, chow mein isn't something we have on our menu. Can I suggest something else? Maybe the ofoda.",
+                    "time": 1792497569914,
+                    "endTime": 1792497577294,
+                    "secondsFromStart": 16.789,
+                    "duration": 6600,
+                    "source": "",
+                    "assistantName": "Spice Route Assistant",
+                    "assistantId": "2f355993-c8af-4ac3-a123-6e6f547e3bb1"
+                  },
+                  {
+                    "role": "user",
+                    "message": "I meant chow mein, chow mein, chow mein. Chow. Mein.",
+                    "time": 1792497577305,
+                    "endTime": 1792497581445,
+                    "secondsFromStart": 24.18,
+                    "duration": 3180,
+                    "metadata": {
+                      "wordLevelConfidence": [
+                        {
+                          "word": "I",
+                          "start": 24.18,
+                          "end": 24.24,
+                          "confidence": 0.996,
+                          "punctuated_word": "I",
+                          "language": "en"
+                        },
+                        {
+                          "word": "me",
+                          "start": 24.54,
+                          "end": 24.6,
+                          "confidence": 0.999,
+                          "punctuated_word": "me",
+                          "language": "en"
+                        },
+                        {
+                          "word": "ant",
+                          "start": 24.66,
+                          "end": 24.72,
+                          "confidence": 0.994,
+                          "punctuated_word": "ant",
+                          "language": "en"
+                        },
+                        {
+                          "word": "ch",
+                          "start": 24.9,
+                          "end": 24.96,
+                          "confidence": 0.907,
+                          "punctuated_word": "ch",
+                          "language": "en"
+                        },
+                        {
+                          "word": "ow",
+                          "start": 25.08,
+                          "end": 25.14,
+                          "confidence": 0.997,
+                          "punctuated_word": "ow",
+                          "language": "en"
+                        },
+                        {
+                          "word": "me",
+                          "start": 25.26,
+                          "end": 25.32,
+                          "confidence": 0.993,
+                          "punctuated_word": "me",
+                          "language": "en"
+                        },
+                        {
+                          "word": "in,",
+                          "start": 25.44,
+                          "end": 25.5,
+                          "confidence": 0.873,
+                          "punctuated_word": "in,",
+                          "language": "en"
+                        },
+                        {
+                          "word": "ch",
+                          "start": 26.04,
+                          "end": 26.1,
+                          "confidence": 0.996,
+                          "punctuated_word": "ch",
+                          "language": "en"
+                        },
+                        {
+                          "word": "ow",
+                          "start": 26.16,
+                          "end": 26.22,
+                          "confidence": 0.995,
+                          "punctuated_word": "ow",
+                          "language": "en"
+                        },
+                        {
+                          "word": "me",
+                          "start": 26.34,
+                          "end": 26.4,
+                          "confidence": 0.99,
+                          "punctuated_word": "me",
+                          "language": "en"
+                        },
+                        {
+                          "word": "in,",
+                          "start": 26.52,
+                          "end": 26.58,
+                          "confidence": 0.516,
+                          "punctuated_word": "in,",
+                          "language": "en"
+                        },
+                        {
+                          "word": "ch",
+                          "start": 27.18,
+                          "end": 27.24,
+                          "confidence": 0.481,
+                          "punctuated_word": "ch",
+                          "language": "en"
+                        },
+                        {
+                          "word": "ow",
+                          "start": 27.24,
+                          "end": 27.24,
+                          "confidence": 0.986,
+                          "punctuated_word": "ow",
+                          "language": "en"
+                        },
+                        {
+                          "word": "me",
+                          "start": 27.24,
+                          "end": 27.24,
+                          "confidence": 0.792,
+                          "punctuated_word": "me",
+                          "language": "en"
+                        },
+                        {
+                          "word": "in.",
+                          "start": 27.24,
+                          "end": 27.24,
+                          "confidence": 0.931,
+                          "punctuated_word": "in.",
+                          "language": "en"
+                        },
+                        {
+                          "word": "Ch",
+                          "start": 27.78,
+                          "end": 27.84,
+                          "confidence": 0.865,
+                          "punctuated_word": "Ch",
+                          "language": "en"
+                        },
+                        {
+                          "word": "ow",
+                          "start": 27.84,
+                          "end": 27.84,
+                          "confidence": 0.514,
+                          "punctuated_word": "ow",
+                          "language": "en"
+                        },
+                        {
+                          "word": ".",
+                          "start": 27.84,
+                          "end": 27.84,
+                          "confidence": 0.911,
+                          "punctuated_word": ".",
+                          "language": "en"
+                        },
+                        {
+                          "word": "Me",
+                          "start": 28.26,
+                          "end": 28.32,
+                          "confidence": 0.965,
+                          "punctuated_word": "Me",
+                          "language": "en"
+                        },
+                        {
+                          "word": "in.",
+                          "start": 28.32,
+                          "end": 28.32,
+                          "confidence": 0.912,
+                          "punctuated_word": "in.",
+                          "language": "en"
+                        }
+                      ]
+                    },
+                    "confidence": 0.7633333333333333,
+                    "confidenceSource": "derived"
+                  },
+                  {
+                    "role": "bot",
+                    "message": "I completely understand. And I'm sorry about that. Unfortunately, chow mein isn't on our menu. We specialize in Nigerian cuisine. Can I suggest something similar, like our fried plantain or moi moi as a side?",
+                    "time": 1792497583414,
+                    "endTime": 1792497594934,
+                    "secondsFromStart": 30.289,
+                    "duration": 9840,
+                    "source": "",
+                    "assistantName": "Spice Route Assistant",
+                    "assistantId": "2f355993-c8af-4ac3-a123-6e6f547e3bb1"
+                  },
+                  {
+                    "role": "user",
+                    "message": "My mind is okay.",
+                    "time": 1792497598185,
+                    "endTime": 1792497598605,
+                    "secondsFromStart": 45.06,
+                    "duration": 420,
+                    "metadata": {
+                      "wordLevelConfidence": [
+                        {
+                          "word": "My",
+                          "start": 45.06,
+                          "end": 45.12,
+                          "confidence": 0.874,
+                          "punctuated_word": "My",
+                          "language": "en"
+                        },
+                        {
+                          "word": "mind",
+                          "start": 45.24,
+                          "end": 45.3,
+                          "confidence": 0.277,
+                          "punctuated_word": "mind",
+                          "language": "en"
+                        },
+                        {
+                          "word": "is",
+                          "start": 45.42,
+                          "end": 45.48,
+                          "confidence": 0.991,
+                          "punctuated_word": "is",
+                          "language": "en"
+                        },
+                        {
+                          "word": "ok",
+                          "start": 45.48,
+                          "end": 45.48,
+                          "confidence": 0.988,
+                          "punctuated_word": "ok",
+                          "language": "en"
+                        },
+                        {
+                          "word": "ay.",
+                          "start": 45.48,
+                          "end": 45.48,
+                          "confidence": 0.995,
+                          "punctuated_word": "ay.",
+                          "language": "en"
+                        }
+                      ]
+                    },
+                    "confidence": 0.825,
+                    "confidenceSource": "derived"
+                  },
+                  {
+                    "role": "bot",
+                    "message": "I hear you, and I apologize for any confusion. Unfortunately, chow mein simply isn't a dish we serve here at SpiceRoute Kitchen. Would you like to swap it for something else from our menu, or shall I just go ahead with the one jollof rice with grilled chicken?",
+                    "time": 1792497600454,
+                    "endTime": 1792497612574,
+                    "secondsFromStart": 47.329,
+                    "duration": 11160,
+                    "source": "",
+                    "assistantName": "Spice Route Assistant",
+                    "assistantId": "2f355993-c8af-4ac3-a123-6e6f547e3bb1"
+                  },
+                  {
+                    "role": "user",
+                    "message": "Just go ahead with the jollof rice and chicken.",
+                    "time": 1792497615165,
+                    "endTime": 1792497616485,
+                    "secondsFromStart": 62.04,
+                    "duration": 1320,
+                    "metadata": {
+                      "wordLevelConfidence": [
+                        {
+                          "word": "Just",
+                          "start": 62.04,
+                          "end": 62.1,
+                          "confidence": 0.989,
+                          "punctuated_word": "Just",
+                          "language": "en"
+                        },
+                        {
+                          "word": "go",
+                          "start": 62.28,
+                          "end": 62.34,
+                          "confidence": 0.993,
+                          "punctuated_word": "go",
+                          "language": "en"
+                        },
+                        {
+                          "word": "a",
+                          "start": 62.34,
+                          "end": 62.4,
+                          "confidence": 1,
+                          "punctuated_word": "a",
+                          "language": "en"
+                        },
+                        {
+                          "word": "head",
+                          "start": 62.46,
+                          "end": 62.52,
+                          "confidence": 0.999,
+                          "punctuated_word": "head",
+                          "language": "en"
+                        },
+                        {
+                          "word": "with",
+                          "start": 62.58,
+                          "end": 62.64,
+                          "confidence": 1,
+                          "punctuated_word": "with",
+                          "language": "en"
+                        },
+                        {
+                          "word": "the",
+                          "start": 62.7,
+                          "end": 62.76,
+                          "confidence": 0.999,
+                          "punctuated_word": "the",
+                          "language": "en"
+                        },
+                        {
+                          "word": "j",
+                          "start": 62.82,
+                          "end": 62.88,
+                          "confidence": 0.999,
+                          "punctuated_word": "j",
+                          "language": "en"
+                        },
+                        {
+                          "word": "ollo",
+                          "start": 63,
+                          "end": 63.06,
+                          "confidence": 0.981,
+                          "punctuated_word": "ollo",
+                          "language": "en"
+                        },
+                        {
+                          "word": "f",
+                          "start": 63.06,
+                          "end": 63.12,
+                          "confidence": 1,
+                          "punctuated_word": "f",
+                          "language": "en"
+                        },
+                        {
+                          "word": "r",
+                          "start": 63.12,
+                          "end": 63.18,
+                          "confidence": 0.97,
+                          "punctuated_word": "r",
+                          "language": "en"
+                        },
+                        {
+                          "word": "ice",
+                          "start": 63.24,
+                          "end": 63.3,
+                          "confidence": 0.999,
+                          "punctuated_word": "ice",
+                          "language": "en"
+                        },
+                        {
+                          "word": "and",
+                          "start": 63.3,
+                          "end": 63.36,
+                          "confidence": 1,
+                          "punctuated_word": "and",
+                          "language": "en"
+                        },
+                        {
+                          "word": "ch",
+                          "start": 63.36,
+                          "end": 63.36,
+                          "confidence": 0.995,
+                          "punctuated_word": "ch",
+                          "language": "en"
+                        },
+                        {
+                          "word": "ick",
+                          "start": 63.36,
+                          "end": 63.36,
+                          "confidence": 1,
+                          "punctuated_word": "ick",
+                          "language": "en"
+                        },
+                        {
+                          "word": "en.",
+                          "start": 63.36,
+                          "end": 63.36,
+                          "confidence": 1,
+                          "punctuated_word": "en.",
+                          "language": "en"
+                        }
+                      ]
+                    },
+                    "confidence": 0.9949333333333333,
+                    "confidenceSource": "derived"
+                  },
+                  {
+                    "role": "bot",
+                    "message": "Sure. And is that for pickup or delivery?",
+                    "time": 1792497618574,
+                    "endTime": 1792497620734,
+                    "secondsFromStart": 65.449,
+                    "duration": 2160,
+                    "source": "",
+                    "assistantName": "Spice Route Assistant",
+                    "assistantId": "2f355993-c8af-4ac3-a123-6e6f547e3bb1"
+                  },
+                  {
+                    "role": "user",
+                    "message": "Let's pick up order.",
+                    "time": 1792497623205,
+                    "endTime": 1792497623685,
+                    "secondsFromStart": 70.08,
+                    "duration": 480,
+                    "metadata": {
+                      "wordLevelConfidence": [
+                        {
+                          "word": "Let",
+                          "start": 70.08,
+                          "end": 70.14,
+                          "confidence": 0.445,
+                          "punctuated_word": "Let",
+                          "language": "en"
+                        },
+                        {
+                          "word": "'s",
+                          "start": 70.2,
+                          "end": 70.26,
+                          "confidence": 0.998,
+                          "punctuated_word": "'s",
+                          "language": "en"
+                        },
+                        {
+                          "word": "p",
+                          "start": 70.32,
+                          "end": 70.38,
+                          "confidence": 1,
+                          "punctuated_word": "p",
+                          "language": "en"
+                        },
+                        {
+                          "word": "ick",
+                          "start": 70.38,
+                          "end": 70.44,
+                          "confidence": 1,
+                          "punctuated_word": "ick",
+                          "language": "en"
+                        },
+                        {
+                          "word": "up",
+                          "start": 70.5,
+                          "end": 70.56,
+                          "confidence": 0.999,
+                          "punctuated_word": "up",
+                          "language": "en"
+                        },
+                        {
+                          "word": "ord",
+                          "start": 70.56,
+                          "end": 70.56,
+                          "confidence": 0.706,
+                          "punctuated_word": "ord",
+                          "language": "en"
+                        },
+                        {
+                          "word": "er.",
+                          "start": 70.56,
+                          "end": 70.56,
+                          "confidence": 0.972,
+                          "punctuated_word": "er.",
+                          "language": "en"
+                        }
+                      ]
+                    },
+                    "confidence": 0.8742857142857142,
+                    "confidenceSource": "derived"
+                  },
+                  {
+                    "role": "bot",
+                    "message": "What name should I put the order under?",
+                    "time": 1792497625474,
+                    "endTime": 1792497626614,
+                    "secondsFromStart": 72.349,
+                    "duration": 1140,
+                    "source": "",
+                    "assistantName": "Spice Route Assistant",
+                    "assistantId": "2f355993-c8af-4ac3-a123-6e6f547e3bb1"
+                  },
+                  {
+                    "role": "user",
+                    "message": "James,.",
+                    "time": 1792497629445,
+                    "endTime": 1792497630405,
+                    "secondsFromStart": 76.32,
+                    "duration": 960,
+                    "metadata": {
+                      "wordLevelConfidence": [
+                        {
+                          "word": "Jam",
+                          "start": 76.32,
+                          "end": 76.38,
+                          "confidence": 0.865,
+                          "punctuated_word": "Jam",
+                          "language": "en"
+                        },
+                        {
+                          "word": "es,",
+                          "start": 76.56,
+                          "end": 76.62,
+                          "confidence": 0.893,
+                          "punctuated_word": "es,",
+                          "language": "en"
+                        },
+                        {
+                          "word": ".",
+                          "start": 77.22,
+                          "end": 77.28,
+                          "confidence": 0.282,
+                          "punctuated_word": ".",
+                          "language": "en"
+                        }
+                      ]
+                    },
+                    "confidence": 0.68,
+                    "confidenceSource": "derived"
+                  },
+                  {
+                    "role": "bot",
+                    "message": "And what's your phone number, James?",
+                    "time": 1792497632254,
+                    "endTime": 1792497633094,
+                    "secondsFromStart": 79.129,
+                    "duration": 840,
+                    "source": "",
+                    "assistantName": "Spice Route Assistant",
+                    "assistantId": "2f355993-c8af-4ac3-a123-6e6f547e3bb1"
+                  },
+                  {
+                    "role": "user",
+                    "message": "0813 124 1. 144.",
+                    "time": 1792497636345,
+                    "endTime": 1792497640485,
+                    "secondsFromStart": 83.22,
+                    "duration": 3600,
+                    "metadata": {
+                      "wordLevelConfidence": [
+                        {
+                          "word": "0",
+                          "start": 83.22,
+                          "end": 83.28,
+                          "confidence": 0.99,
+                          "punctuated_word": "0",
+                          "language": "en"
+                        },
+                        {
+                          "word": "8",
+                          "start": 83.58,
+                          "end": 83.64,
+                          "confidence": 0.995,
+                          "punctuated_word": "8",
+                          "language": "en"
+                        },
+                        {
+                          "word": "1",
+                          "start": 84,
+                          "end": 84.06,
+                          "confidence": 0.999,
+                          "punctuated_word": "1",
+                          "language": "en"
+                        },
+                        {
+                          "word": "3",
+                          "start": 84.42,
+                          "end": 84.48,
+                          "confidence": 0.998,
+                          "punctuated_word": "3",
+                          "language": "en"
+                        },
+                        {
+                          "word": "1",
+                          "start": 85.02,
+                          "end": 85.08,
+                          "confidence": 0.551,
+                          "punctuated_word": "1",
+                          "language": "en"
+                        },
+                        {
+                          "word": "2",
+                          "start": 85.38,
+                          "end": 85.44,
+                          "confidence": 1,
+                          "punctuated_word": "2",
+                          "language": "en"
+                        },
+                        {
+                          "word": "4",
+                          "start": 85.62,
+                          "end": 85.68,
+                          "confidence": 0.999,
+                          "punctuated_word": "4",
+                          "language": "en"
+                        },
+                        {
+                          "word": "1",
+                          "start": 86.22,
+                          "end": 86.28,
+                          "confidence": 0.938,
+                          "punctuated_word": "1",
+                          "language": "en"
+                        },
+                        {
+                          "word": ".",
+                          "start": 86.28,
+                          "end": 86.28,
+                          "confidence": 0.816,
+                          "punctuated_word": ".",
+                          "language": "en"
+                        },
+                        {
+                          "word": "1",
+                          "start": 86.82,
+                          "end": 86.88,
+                          "confidence": 0.998,
+                          "punctuated_word": "1",
+                          "language": "en"
+                        },
+                        {
+                          "word": "4",
+                          "start": 87.12,
+                          "end": 87.18,
+                          "confidence": 0.998,
+                          "punctuated_word": "4",
+                          "language": "en"
+                        },
+                        {
+                          "word": "4",
+                          "start": 87.3,
+                          "end": 87.36,
+                          "confidence": 0.999,
+                          "punctuated_word": "4",
+                          "language": "en"
+                        },
+                        {
+                          "word": ".",
+                          "start": 87.36,
+                          "end": 87.36,
+                          "confidence": 0.998,
+                          "punctuated_word": ".",
+                          "language": "en"
+                        }
+                      ]
+                    },
+                    "confidence": 0.9206666666666666,
+                    "confidenceSource": "derived"
+                  },
+                  {
+                    "role": "bot",
+                    "message": "Let me repeat that back: 08131241144. Is that correct?",
+                    "time": 1792497642274,
+                    "endTime": 1792497649534,
+                    "secondsFromStart": 89.149,
+                    "duration": 7260,
+                    "source": "",
+                    "assistantName": "Spice Route Assistant",
+                    "assistantId": "2f355993-c8af-4ac3-a123-6e6f547e3bb1"
+                  },
+                  {
+                    "role": "user",
+                    "message": "Yeah, sounds right.",
+                    "time": 1792497651825,
+                    "endTime": 1792497652245,
+                    "secondsFromStart": 98.7,
+                    "duration": 420,
+                    "metadata": {
+                      "wordLevelConfidence": [
+                        {
+                          "word": "Ye",
+                          "start": 98.7,
+                          "end": 98.76,
+                          "confidence": 0.996,
+                          "punctuated_word": "Ye",
+                          "language": "en"
+                        },
+                        {
+                          "word": "ah,",
+                          "start": 98.82,
+                          "end": 98.88,
+                          "confidence": 0.993,
+                          "punctuated_word": "ah,",
+                          "language": "en"
+                        },
+                        {
+                          "word": "so",
+                          "start": 99.06,
+                          "end": 99.12,
+                          "confidence": 0.987,
+                          "punctuated_word": "so",
+                          "language": "en"
+                        },
+                        {
+                          "word": "und",
+                          "start": 99.12,
+                          "end": 99.12,
+                          "confidence": 0.999,
+                          "punctuated_word": "und",
+                          "language": "en"
+                        },
+                        {
+                          "word": "s",
+                          "start": 99.12,
+                          "end": 99.12,
+                          "confidence": 0.999,
+                          "punctuated_word": "s",
+                          "language": "en"
+                        },
+                        {
+                          "word": "right",
+                          "start": 99.12,
+                          "end": 99.12,
+                          "confidence": 1,
+                          "punctuated_word": "right",
+                          "language": "en"
+                        },
+                        {
+                          "word": ".",
+                          "start": 99.12,
+                          "end": 99.12,
+                          "confidence": 0.999,
+                          "punctuated_word": ".",
+                          "language": "en"
+                        }
+                      ]
+                    },
+                    "confidence": 0.9961428571428571,
+                    "confidenceSource": "derived"
+                  },
+                  {
+                    "role": "bot",
+                    "message": "So that's one jollof rice with grilled chicken for pickup, under James at 081312. 241144. Shall I place that?",
+                    "time": 1792497654094,
+                    "endTime": 1792497663214,
+                    "secondsFromStart": 100.969,
+                    "duration": 7560,
+                    "source": "",
+                    "assistantName": "Spice Route Assistant",
+                    "assistantId": "2f355993-c8af-4ac3-a123-6e6f547e3bb1"
+                  },
+                  {
+                    "role": "user",
+                    "message": "Yes.",
+                    "time": 1792497665385,
+                    "endTime": 1792497665445,
+                    "secondsFromStart": 112.26,
+                    "duration": 60,
+                    "metadata": {
+                      "wordLevelConfidence": [
+                        {
+                          "word": "Y",
+                          "start": 112.26,
+                          "end": 112.32,
+                          "confidence": 1,
+                          "punctuated_word": "Y",
+                          "language": "en"
+                        },
+                        {
+                          "word": "es.",
+                          "start": 112.32,
+                          "end": 112.32,
+                          "confidence": 1,
+                          "punctuated_word": "es.",
+                          "language": "en"
+                        }
+                      ]
+                    },
+                    "confidence": 1,
+                    "confidenceSource": "derived"
+                  },
+                  {
+                    "toolCalls": [
+                      {
+                        "type": "function",
+                        "id": "toolu_01H7qzy8PJYMxphYfh3cNZMH",
+                        "function": {
+                          "name": "create_order",
+                          "arguments": "{\n  \"customer_name\": \"James\",\n  \"phone\": \"08131241144\",\n  \"order_type\": \"pickup\",\n  \"items\": [\n    {\n      \"name\": \"Jollof Rice with Grilled Chicken\",\n      \"quantity\": 1\n    }\n  ]\n}"
+                        }
+                      }
+                    ],
+                    "role": "tool_calls",
+                    "message": "",
+                    "time": 1792497672762,
+                    "secondsFromStart": 119.637
+                  }
+                ],
+                "messagesOpenAIFormatted": [
+                  {
+                    "role": "system",
+                    "content": "# Identity\nYou are Alex, the friendly phone receptionist for Spice Route Kitchen, a Nigerian restaurant at 14 Admiralty Way, Lekki Phase 1, Lagos.\nCurrent date and time in Lagos: Tuesday, 20 October 2026, 12:59 PM\n\n# Speaking style\n- Warm, calm and natural. One or two short sentences per turn.\n- Ask only ONE question at a time.\n- Say prices in naira. Read phone numbers and codes digit by digit.\n- Never read the whole menu. Mention at most three items at a time.\n\n# Restaurant facts\n- Open Tuesday to Sunday, 12:00 to 22:00. CLOSED on Mondays. Last reservation time is 21:00.\n- 40 seats per time slot. Groups above 12 people: take their number and say the manager will call back.\n- Pickup ready in about 30 minutes. Delivery in about 45 to 60 minutes, Lekki and Victoria Island only. The delivery fee is paid to the rider.\n- Payment by card, transfer or cash. Free parking for 15 cars.\n- Walk-ins are welcome but weekends fill up, so booking is recommended.\n- Vegetarian options: Moi Moi, Fried Pl..."
+                  },
+                  {
+                    "role": "assistant",
+                    "content": "Thank you for calling SpiceRoute Kitchen, this is Alex. How can I help you today?"
+                  },
+                  {
+                    "role": "user",
+                    "content": "Yeah, um, I want to pick up on that one jollof rice with grilled chicken and two chow mein."
+                  },
+                  {
+                    "role": "assistant",
+                    "content": "I'd love to help with the jollof rice with grilled chicken. However, chow mein isn't something we have on our menu. Can I suggest something else? Maybe the ofoda."
+                  },
+                  {
+                    "role": "user",
+                    "content": "I meant chow mein, chow mein, chow mein. Chow. Mein."
+                  },
+                  {
+                    "role": "assistant",
+                    "content": "I completely understand. And I'm sorry about that. Unfortunately, chow mein isn't on our menu. We specialize in Nigerian cuisine. Can I suggest something similar, like our fried plantain or moi moi as a side?"
+                  },
+                  {
+                    "role": "user",
+                    "content": "My mind is okay."
+                  },
+                  {
+                    "role": "assistant",
+                    "content": "I hear you, and I apologize for any confusion. Unfortunately, chow mein simply isn't a dish we serve here at SpiceRoute Kitchen. Would you like to swap it for something else from our menu, or shall I just go ahead with the one jollof rice with grilled chicken?"
+                  },
+                  {
+                    "role": "user",
+                    "content": "Just go ahead with the jollof rice and chicken."
+                  },
+                  {
+                    "role": "assistant",
+                    "content": "Sure. And is that for pickup or delivery?"
+                  },
+                  {
+                    "role": "user",
+                    "content": "Let's pick up order."
+                  },
+                  {
+                    "role": "assistant",
+                    "content": "What name should I put the order under?"
+                  },
+                  {
+                    "role": "user",
+                    "content": "James,."
+                  },
+                  {
+                    "role": "assistant",
+                    "content": "And what's your phone number, James?"
+                  },
+                  {
+                    "role": "user",
+                    "content": "0813 124 1. 144."
+                  },
+                  {
+                    "role": "assistant",
+                    "content": "Let me repeat that back: 08131241144. Is that correct?"
+                  },
+                  {
+                    "role": "user",
+                    "content": "Yeah, sounds right."
+                  },
+                  {
+                    "role": "assistant",
+                    "content": "So that's one jollof rice with grilled chicken for pickup, under James at 081312. 241144. Shall I place that?"
+                  },
+                  {
+                    "role": "user",
+                    "content": "Yes."
+                  },
+                  {
+                    "role": "assistant",
+                    "tool_calls": [
+                      {
+                        "type": "function",
+                        "id": "toolu_01H7qzy8PJYMxphYfh3cNZMH",
+                        "function": {
+                          "name": "create_order",
+                          "arguments": "{\n  \"customer_name\": \"James\",\n  \"phone\": \"08131241144\",\n  \"order_type\": \"pickup\",\n  \"items\": [\n    {\n      \"name\": \"Jollof Rice with Grilled Chicken\",\n      \"quantity\": 1\n    }\n  ]\n}"
+                        }
+                      }
+                    ]
+                  },
+                  {
+                    "role": "tool",
+                    "tool_call_id": "toolu_01H7qzy8PJYMxphYfh3cNZMH",
+                    "content": "Tool Result Still Pending But Proceed Further If Possible."
+                  }
+                ],
+                "variables": {
+                  "now": "Oct 20, 2026, 11:59 AM UTC",
+                  "currentDateTime": "Tuesday, October 20, 2026 at 11:59 AM UTC",
+                  "date": "Oct 20, 2026 UTC",
+                  "time": "11:59 AM UTC",
+                  "year": "2026",
+                  "month": "October",
+                  "day": "20",
+                  "transport": {
+                    "conversationType": "voice",
+                    "provider": "daily",
+                    "videoRecordingEnabled": false,
+                    "assistantVideoEnabled": false,
+                    "roomDeleteOnUserLeaveEnabled": true,
+                    "callUrl": "https://vapi.daily.co/2jbzCC8raqIWnDP4j6lH"
+                  },
+                  "call": {
+                    "id": "01a1592e-0cad-7888-abaf-14f339ab7ee4",
+                    "type": "webCall",
+                    "status": "queued",
+                    "createdAt": "2026-10-20T11:59:12.557Z",
+                    "transport": {
+                      "conversationType": "voice",
+                      "provider": "daily",
+                      "videoRecordingEnabled": false,
+                      "assistantVideoEnabled": false,
+                      "roomDeleteOnUserLeaveEnabled": true,
+                      "callUrl": "https://vapi.daily.co/2jbzCC8raqIWnDP4j6lH"
+                    }
+                  }
+                },
+                "variableValues": {
+                  "now": "Oct 20, 2026, 11:59 AM UTC",
+                  "currentDateTime": "Tuesday, October 20, 2026 at 11:59 AM UTC",
+                  "date": "Oct 20, 2026 UTC",
+                  "time": "11:59 AM UTC",
+                  "year": "2026",
+                  "month": "October",
+                  "day": "20",
+                  "transport": {
+                    "conversationType": "voice",
+                    "provider": "daily",
+                    "videoRecordingEnabled": false,
+                    "assistantVideoEnabled": false,
+                    "roomDeleteOnUserLeaveEnabled": true,
+                    "callUrl": "https://vapi.daily.co/2jbzCC8raqIWnDP4j6lH"
+                  },
+                  "call": {
+                    "id": "01a1592e-0cad-7888-abaf-14f339ab7ee4",
+                    "type": "webCall",
+                    "status": "queued",
+                    "createdAt": "2026-10-20T11:59:12.557Z",
+                    "transport": {
+                      "conversationType": "voice",
+                      "provider": "daily",
+                      "videoRecordingEnabled": false,
+                      "assistantVideoEnabled": false,
+                      "roomDeleteOnUserLeaveEnabled": true,
+                      "callUrl": "https://vapi.daily.co/2jbzCC8raqIWnDP4j6lH"
+                    }
+                  }
+                }
+              },
+              "call": {
+                "id": "01a1592e-0cad-7888-abaf-14f339ab7ee4",
+                "orgId": "919cabd1-f058-46f1-9fb1-5062ac5ff757",
+                "createdAt": "2026-10-20T11:59:12.557Z",
+                "updatedAt": "2026-10-20T11:59:12.557Z",
+                "type": "webCall",
+                "cost": 0,
+                "monitor": {
+                  "listenUrl": "wss://phone-call-websocket.aws-us-west-2-backend-production1.vapi.ai/01a1592e-0cad-7888-abaf-14f339ab7ee4/listen",
+                  "controlUrl": "https://phone-call-websocket.aws-us-west-2-backend-production1.vapi.ai/01a1592e-0cad-7888-abaf-14f339ab7ee4/control"
+                },
+                "transport": {
+                  "conversationType": "voice",
+                  "provider": "daily",
+                  "videoRecordingEnabled": false,
+                  "assistantVideoEnabled": false,
+                  "roomDeleteOnUserLeaveEnabled": true,
+                  "callUrl": "https://vapi.daily.co/2jbzCC8raqIWnDP4j6lH"
+                },
+                "webCallUrl": "https://vapi.daily.co/2jbzCC8raqIWnDP4j6lH",
+                "status": "queued",
+                "assistantId": "2f355993-c8af-4ac3-a123-6e6f547e3bb1",
+                "assistantVersion": "v7",
+                "assistantOverrides": {
+                  "clientMessages": [
+                    "transcript",
+                    "hang",
+                    "metadata",
+                    "tool-calls",
+                    "tool-calls-result",
+                    "tool.completed",
+                    "transfer-update",
+                    "user-interrupted",
+                    "status-update",
+                    "assistant.started"
+                  ],
+                  "variableValues": {}
+                }
+              },
+              "assistant": {
+                "id": "2f355993-c8af-4ac3-a123-6e6f547e3bb1",
+                "orgId": "919cabd1-f058-46f1-9fb1-5062ac5ff757",
+                "name": "Spice Route Assistant",
+                "voice": {
+                  "version": "2",
+                  "voiceId": "Elliot",
+                  "provider": "vapi"
+                },
+                "createdAt": "2026-10-20T06:10:00.923Z",
+                "updatedAt": "2026-10-20T08:22:50.425Z",
+                "model": {
+                  "model": "claude-sonnet-4-6",
+                  "toolIds": [
+                    "728247cc-753c-424d-8954-8849e7b13cf3",
+                    "3b3ffb9d-e5d6-40d1-b4f4-9534bffc7fb3",
+                    "dac26b35-45f6-4bfc-8673-f4b50d05ef9b"
+                  ],
+                  "messages": [
+                    {
+                      "role": "system",
+                      "content": "# Identity\nYou are Alex, the friendly phone receptionist for Spice Route Kitchen, a Nigerian restaurant at 14 Admiralty Way, Lekki Phase 1, Lagos.\nCurrent date and time in Lagos: Tuesday, 20 October 2026, 12:59 PM\n\n# Speaking style\n- Warm, calm and natural. One or two short sentences per turn.\n- Ask only ONE question at a time.\n- Say prices in naira. Read phone numbers and codes digit by digit.\n- Never read the whole menu. Mention at most three items at a time.\n\n# Restaurant facts\n- Open Tuesday to Sunday, 12:00 to 22:00. CLOSED on Mondays. Last reservation time is 21:00.\n- 40 seats per time slot. Groups above 12 people: take their number and say the manager will call back.\n- Pickup ready in about 30 minutes. Delivery in about 45 to 60 minutes, Lekki and Victoria Island only. The delivery fee is paid to the rider.\n- Payment by card, transfer or cash. Free parking for 15 cars.\n- Walk-ins are welcome but weekends fill up, so booking is recommended.\n- Vegetarian options: Moi Moi, Fried Plantain, Puff Puff, and egusi soup without meat on request.\n- Guests may bring their own birthday cake; a small plating fee may apply and the manager will confirm.\n- Cancellations: please tell us at least 3 hours before.\n- Allergies: many dishes contain groundnut, fish or shellfish. NEVER promise a dish is allergen-free. Offer a manager callback.\n\n# Menu (use these exact names)\nJollof Rice with Grilled Chicken 6500; Ofada Rice with Ayamase 7500; Egusi Soup with Pounded Yam 7000; Suya Platter 8500; Peppered Asun 5500; Fried Plantain 2000; Moi Moi 1500; Puff Puff 2000; Chapman 2500; Zobo 1500.\n\n# Taking a reservation\n1. Ask for name, number of guests, date, time and any special request.\n2. Turn dates like 'this Friday' into YYYY-MM-DD using the current date above. Turn times into 24-hour HH:MM.\n3. Ask for the phone number and repeat it back to confirm.\n4. Call check_availability first. If full, offer another time.\n5. If available, repeat all details and ask 'Shall I confirm that?'. Only after a yes, call create_reservation.\n6. Read the confirmation code to the caller.\n\n# Taking an order\n1. Ask what they would like. Use exact menu names. Ask pickup or delivery; for delivery ask for the address.\n2. Ask for their name and phone number.\n3. Repeat the order and ask 'Shall I place that?'. Only after a yes, call create_order.\n4. Tell them the order number, the total and the waiting time from the tool result.\n\n# Rules\n- Never invent menu items, prices or policies. If unsure, offer a manager callback and take their number.\n- Never say you are using a tool. If a tool fails, apologise and offer a manager callback.\n- At the end ask 'Is there anything else I can help with?', then say a warm goodbye."
+                    }
+                  ],
+                  "provider": "anthropic",
+                  "tools": [
+                    {
+                      "id": "728247cc-753c-424d-8954-8849e7b13cf3",
+                      "createdAt": "2026-10-20T06:30:49.883Z",
+                      "updatedAt": "2026-10-20T08:21:48.627Z",
+                      "type": "function",
+                      "function": {
+                        "name": "create_order",
+                        "parameters": {
+                          "type": "object",
+                          "required": [
+                            "customer_name",
+                            "phone",
+                            "order_type",
+                            "items"
+                          ],
+                          "properties": {
+                            "items": {
+                              "type": "array",
+                              "items": {
+                                "type": "object",
+                                "required": [
+                                  "name",
+                                  "quantity"
+                                ],
+                                "properties": {
+                                  "name": {
+                                    "type": "string"
+                                  },
+                                  "quantity": {
+                                    "type": "integer"
+                                  }
+                                }
+                              },
+                              "description": "Each dish with exact menu name and quantity"
+                            },
+                            "phone": {
+                              "type": "string"
+                            },
+                            "order_type": {
+                              "enum": [
+                                "pickup",
+                                "delivery"
+                              ],
+                              "type": "string"
+                            },
+                            "customer_name": {
+                              "type": "string"
+                            },
+                            "delivery_address": {
+                              "type": "string",
+                              "description": "Only for delivery"
+                            }
+                          }
+                        },
+                        "description": "Place a food order after the caller confirms it."
+                      },
+                      "messages": [
+                        {
+                          "type": "request-start",
+                          "blocking": false
+                        }
+                      ],
+                      "orgId": "919cabd1-f058-46f1-9fb1-5062ac5ff757",
+                      "server": {
+                        "url": "https://n8n.caesarai.site/webhook/restaurant-brain",
+                        "timeoutSeconds": 20,
+                        "staticIpAddressesEnabled": false
+                      },
+                      "variableExtractionPlan": {
+                        "schema": {
+                          "type": "object",
+                          "required": [],
+                          "properties": {}
+                        }
+                      },
+                      "latestVersion": "v3"
+                    },
+                    {
+                      "id": "3b3ffb9d-e5d6-40d1-b4f4-9534bffc7fb3",
+                      "createdAt": "2026-10-20T06:29:25.925Z",
+                      "updatedAt": "2026-10-20T08:22:00.810Z",
+                      "type": "function",
+                      "function": {
+                        "name": "create_reservation",
+                        "parameters": {
+                          "type": "object",
+                          "required": [
+                            "customer_name",
+                            "phone",
+                            "date",
+                            "time",
+                            "party_size"
+                          ],
+                          "properties": {
+                            "date": {
+                              "type": "string",
+                              "description": "Date as YYYY-MM-DD"
+                            },
+                            "time": {
+                              "type": "string",
+                              "description": "24-hour time as HH:MM"
+                            },
+                            "notes": {
+                              "type": "string",
+                              "description": "Special requests, optional"
+                            },
+                            "phone": {
+                              "type": "string",
+                              "description": "Caller phone number with country code"
+                            },
+                            "party_size": {
+                              "type": "integer"
+                            },
+                            "customer_name": {
+                              "type": "string"
+                            }
+                          }
+                        },
+                        "description": "Save a confirmed table reservation after the caller agrees."
+                      },
+                      "messages": [
+                        {
+                          "type": "request-start",
+                          "blocking": false
+                        }
+                      ],
+                      "orgId": "919cabd1-f058-46f1-9fb1-5062ac5ff757",
+                      "server": {
+                        "url": "https://n8n.caesarai.site/webhook/restaurant-brain",
+                        "timeoutSeconds": 20,
+                        "staticIpAddressesEnabled": false
+                      },
+                      "variableExtractionPlan": {
+                        "schema": {
+                          "type": "object",
+                          "required": [],
+                          "properties": {}
+                        }
+                      },
+                      "latestVersion": "v3"
+                    },
+                    {
+                      "id": "dac26b35-45f6-4bfc-8673-f4b50d05ef9b",
+                      "createdAt": "2026-10-20T06:26:29.125Z",
+                      "updatedAt": "2026-10-20T08:22:12.516Z",
+                      "type": "function",
+                      "function": {
+                        "name": "check_availability",
+                        "parameters": {
+                          "type": "object",
+                          "required": [
+                            "date",
+                            "time",
+                            "party_size"
+                          ],
+                          "properties": {
+                            "date": {
+                              "type": "string",
+                              "description": "Date as YYYY-MM-DD"
+                            },
+                            "time": {
+                              "type": "string",
+                              "description": "24-hour time as HH:MM, for example 19:00"
+                            },
+                            "party_size": {
+                              "type": "integer",
+                              "description": "Number of guests"
+                            }
+                          }
+                        },
+                        "description": "Check whether the restaurant has seats for a date, time and party size."
+                      },
+                      "messages": [
+                        {
+                          "type": "request-start",
+                          "blocking": false
+                        }
+                      ],
+                      "orgId": "919cabd1-f058-46f1-9fb1-5062ac5ff757",
+                      "server": {
+                        "url": "https://n8n.caesarai.site/webhook/restaurant-brain",
+                        "timeoutSeconds": 20,
+                        "staticIpAddressesEnabled": false
+                      },
+                      "variableExtractionPlan": {
+                        "schema": {
+                          "type": "object",
+                          "required": [],
+                          "properties": {}
+                        }
+                      },
+                      "latestVersion": "v3"
+                    }
+                  ]
+                },
+                "firstMessage": "`Thank you for calling Spice Route Kitchen, this is Alex. How can I help you today?`",
+                "voicemailMessage": "Please call back when you're available.",
+                "endCallMessage": "Goodbye.",
+                "transcriber": {
+                  "model": "stt-rt-v5",
+                  "language": "en",
+                  "provider": "soniox",
+                  "languages": [
+                    "en"
+                  ],
+                  "fallbackPlan": {
+                    "autoFallback": {
+                      "enabled": true
+                    }
+                  }
+                },
+                "clientMessages": [
+                  "transcript",
+                  "hang",
+                  "metadata",
+                  "tool-calls",
+                  "tool-calls-result",
+                  "tool.completed",
+                  "transfer-update",
+                  "user-interrupted",
+                  "status-update",
+                  "assistant.started"
+                ],
+                "serverMessages": [
+                  "end-of-call-report",
+                  "tool-calls"
+                ],
+                "metadata": {
+                  "preset": "highIntelligence:1"
+                },
+                "analysisPlan": {
+                  "summaryPlan": {
+                    "enabled": false
+                  },
+                  "successEvaluationPlan": {
+                    "enabled": false
+                  }
+                },
+                "server": {
+                  "url": "https://n8n.caesarai.site/webhook/restaurant-brain",
+                  "timeoutSeconds": 20
+                },
+                "compliancePlan": {
+                  "pciEnabled": false,
+                  "zdrEnabled": false,
+                  "hipaaEnabled": false
+                },
+                "firstMessageInterruptionsEnabled": false,
+                "latestVersion": "v7"
+              },
+              "assistantVersion": "v7"
+            }
+          },
+          "webhookUrl": "https://n8n.caesarai.site/webhook/restaurant-brain",
+          "executionMode": "production"
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      }
+    ]
+  },
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Message Type",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Message Type": {
+      "main": [
+        [
+          {
+            "node": "Parse Tool Call",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Parse Report",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Respond OK",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Tool Call": {
+      "main": [
+        [
+          {
+            "node": "Which Tool",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Which Tool": {
+      "main": [
+        [
+          {
+            "node": "Get Bookings",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Prep Reservation",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Prep Order",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Bookings": {
+      "main": [
+        [
+          {
+            "node": "Calc Availability",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prep Reservation": {
+      "main": [
+        [
+          {
+            "node": "Save Reservation",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Save Reservation": {
+      "main": [
+        [
+          {
+            "node": "Reply Reservation",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prep Order": {
+      "main": [
+        [
+          {
+            "node": "All Items Valid?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "All Items Valid?": {
+      "main": [
+        [
+          {
+            "node": "Save Order",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Reply Unknown Item",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Save Order": {
+      "main": [
+        [
+          {
+            "node": "Reply Order",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Report": {
+      "main": [
+        [
+          {
+            "node": "Save Call",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Save Call": {
+      "main": [
+        [
+          {
+            "node": "Respond OK",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Calc Availability": {
+      "main": [
+        [
+          {
+            "node": "Respond Tool Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Reply Reservation": {
+      "main": [
+        [
+          {
+            "node": "Respond Tool Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Reply Order": {
+      "main": [
+        [
+          {
+            "node": "Respond Tool Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Reply Unknown Item": {
+      "main": [
+        [
+          {
+            "node": "Respond Tool Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": true
+  },
+  "versionId": "24c39bd4-7175-4eeb-8cf5-40866fa27098",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "f94b5c0a9a0b4d6bf0ce994c5786515525a7ccdf1eeefc29a152c27202100573"
+  },
+  "nodeGroups": [],
+  "id": "3a3umONaw1hndHgY",
+  "tags": []
+}

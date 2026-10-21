@@ -1,0 +1,22 @@
+{
+  "type": "object",
+  "properties": {
+    "customer_name": { "type": "string" },
+    "phone": { "type": "string" },
+    "order_type": { "type": "string", "enum": ["pickup", "delivery"] },
+    "delivery_address": { "type": "string", "description": "Only for delivery" },
+    "items": {
+      "type": "array",
+      "description": "Each dish with exact menu name and quantity",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": { "type": "string" },
+          "quantity": { "type": "integer" }
+        },
+        "required": ["name", "quantity"]
+      }
+    }
+  },
+  "required": ["customer_name", "phone", "order_type", "items"]
+}
