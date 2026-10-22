@@ -7,7 +7,7 @@
 ![Airtable](https://img.shields.io/badge/database-Airtable-18BFFF)
 ![Next.js](https://img.shields.io/badge/dashboard-Next.js-000000)
 
-[▶ Watch the 3-minute demo](YOUR_VIDEO_LINK) · [Open the live dashboard](https://spice-route-restaurant-dashboard-xm.vercel.app/)
+[![Watch the 5-minute demo](https://youtube.com/JFgx1-fwjYk)](https://youtu.be/JFgx1-fwjYk) · [Open the live dashboard](https://spice-route-restaurant-dashboard-xm.vercel.app/)
 
 ![Dashboard overview](docs/images/dashboard-overview.png)
 
